@@ -3,17 +3,22 @@
  * This file demonstrates how to create validators for various libraries
  */
 
-import { Validator } from './index.js';
+import { Validator } from './types';
 
 // Example: Zod validator
 export const createZodValidator = <T>(schema: unknown): Validator<T> => ({
-  validate: (data: unknown) => (schema as { parse: (data: unknown) => T }).parse(data),
+  validate: (data: unknown) =>
+    (schema as { parse: (data: unknown) => T }).parse(data),
 });
 
 // Example: Joi validator
 export const createJoiValidator = <T>(schema: unknown): Validator<T> => ({
   validate: (data: unknown) => {
-    const { error, value } = (schema as { validate: (data: unknown) => { error?: { message: string }; value: T } }).validate(data);
+    const { error, value } = (
+      schema as {
+        validate: (data: unknown) => { error?: { message: string }; value: T };
+      }
+    ).validate(data);
     if (error) {
       throw new Error(`Validation error: ${error.message}`);
     }
@@ -26,7 +31,9 @@ export const createYupValidator = <T>(_schema: unknown): Validator<T> => ({
   validate: (_data: unknown) => {
     // Note: This is a simplified version. In practice, you'd need to handle the async nature
     // by either making the validator async or using a different approach
-    throw new Error('Yup validator requires async handling - use a custom implementation');
+    throw new Error(
+      'Yup validator requires async handling - use a custom implementation'
+    );
   },
 });
 

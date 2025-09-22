@@ -13,22 +13,28 @@ A TypeScript library for parsing fetch responses with support for multiple conte
 ## Installation
 
 ```bash
-npm install parsefetch
+npm install parse-fetch
 ```
 
 ## Basic Usage
 
 ```typescript
-import { parseFetchResponse } from 'parsefetch';
+import { parseFetchResponse, withParse } from 'parse-fetch';
 
-// Basic usage
+// Option 1: withParse higher-order function (recommended)
+const parseFetch = withParse(fetch);
+const data = await parseFetch('https://api.example.com/data').parse<ApiResponse>();
+
+// Option 2: Direct function call
 const response = await fetch('https://api.example.com/data');
 const data = await parseFetchResponse<ApiResponse>(response);
 
-// With content type override
-const data = await parseFetchResponse<ApiResponse>(response, {
-  contentType: 'application/json'
-});
+// With options and validation
+const parseFetch = withParse(fetch);
+const data = await parseFetch('https://api.example.com/data', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' }
+}).parse<ApiResponse>({ validator });
 ```
 
 ## Validation Examples
@@ -37,7 +43,7 @@ const data = await parseFetchResponse<ApiResponse>(response, {
 
 ```typescript
 import { z } from 'zod';
-import { parseFetchResponse, createZodValidator } from 'parsefetch';
+import { parseFetchResponse, createZodValidator } from 'parse-fetch';
 
 const schema = z.object({
   message: z.string(),
@@ -55,7 +61,7 @@ const data = await parseFetchResponse(response, { validator });
 
 ```typescript
 import Joi from 'joi';
-import { parseFetchResponse, createJoiValidator } from 'parsefetch';
+import { parseFetchResponse, createJoiValidator } from 'parse-fetch';
 
 const schema = Joi.object({
   message: Joi.string().required(),
@@ -71,7 +77,7 @@ const data = await parseFetchResponse(response, { validator });
 ### Custom Validator
 
 ```typescript
-import { parseFetchResponse, createCustomValidator } from 'parsefetch';
+import { parseFetchResponse, createCustomValidator } from 'parse-fetch';
 
 const validator = createCustomValidator<{ message: string }>((data) => {
   if (typeof data === 'object' && data !== null && 'message' in data) {
@@ -82,6 +88,36 @@ const validator = createCustomValidator<{ message: string }>((data) => {
 
 const response = await fetch('https://api.example.com/data');
 const data = await parseFetchResponse(response, { validator });
+```
+
+## Chaining Approaches
+
+### Option 1: withParse Higher-Order Function (Recommended)
+```typescript
+import { withParse } from 'parse-fetch';
+
+// Create enhanced fetch
+const parseFetch = withParse(fetch);
+
+// Clean chaining syntax
+const data = await parseFetch('https://api.example.com/data').parse<ApiResponse>();
+
+// With validation
+const data = await parseFetch('https://api.example.com/data').parse<ApiResponse>({ validator });
+
+// Preserves all Response properties
+const response = await parseFetch('https://api.example.com/data');
+console.log(response.status); // 200
+console.log(response.ok); // true
+```
+
+### Option 2: Direct Function Call
+```typescript
+import { parseFetchResponse } from 'parse-fetch';
+
+// Traditional approach
+const response = await fetch('https://api.example.com/data');
+const data = await parseFetchResponse<ApiResponse>(response);
 ```
 
 ## Supported Content Types

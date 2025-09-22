@@ -1,4 +1,4 @@
-import { parseFetchResponse } from './index.js';
+import { parseFetchResponse, withParse } from './index';
 
 interface ApiResponse {
   message: string;
@@ -11,7 +11,9 @@ describe('parseFetchResponse', () => {
       headers: {
         get: jest.fn().mockReturnValue('application/json'),
       },
-      json: jest.fn().mockResolvedValue({ message: 'Hello World', status: 200 }),
+      json: jest
+        .fn()
+        .mockResolvedValue({ message: 'Hello World', status: 200 }),
       ok: true,
       body: {},
     } as unknown as Response;
@@ -97,7 +99,9 @@ describe('parseFetchResponse', () => {
       headers: {
         get: jest.fn().mockReturnValue('text/html'),
       },
-      text: jest.fn().mockResolvedValue('<html><body>Hello World</body></html>'),
+      text: jest
+        .fn()
+        .mockResolvedValue('<html><body>Hello World</body></html>'),
       ok: true,
       body: {},
     } as unknown as Response;
@@ -183,7 +187,9 @@ describe('parseFetchResponse', () => {
       body: {},
     } as unknown as Response;
 
-    const result = await parseFetchResponse<{ '@context': string }>(mockResponse);
+    const result = await parseFetchResponse<{ '@context': string }>(
+      mockResponse
+    );
 
     expect(result).toEqual({ '@context': 'https://schema.org' });
     expect(mockResponse.json).toHaveBeenCalled();
@@ -194,7 +200,9 @@ describe('parseFetchResponse', () => {
       headers: {
         get: jest.fn().mockReturnValue('application/rss+xml'),
       },
-      text: jest.fn().mockResolvedValue('<rss><channel><title>Test</title></channel></rss>'),
+      text: jest
+        .fn()
+        .mockResolvedValue('<rss><channel><title>Test</title></channel></rss>'),
       ok: true,
       body: {},
     } as unknown as Response;
@@ -226,13 +234,15 @@ describe('parseFetchResponse', () => {
       headers: {
         get: jest.fn().mockReturnValue('application/json'),
       },
-      json: jest.fn().mockResolvedValue({ message: 'Hello World', status: 200 }),
+      json: jest
+        .fn()
+        .mockResolvedValue({ message: 'Hello World', status: 200 }),
       ok: true,
       body: {},
     } as unknown as Response;
 
     const validator = {
-      validate: jest.fn().mockImplementation((data) => {
+      validate: jest.fn().mockImplementation(data => {
         if (typeof data === 'object' && data !== null && 'message' in data) {
           return data;
         }
@@ -240,12 +250,18 @@ describe('parseFetchResponse', () => {
       }),
     };
 
-    const result = await parseFetchResponse<{ message: string; status: number }>(mockResponse, {
+    const result = await parseFetchResponse<{
+      message: string;
+      status: number;
+    }>(mockResponse, {
       validator,
     });
 
     expect(result).toEqual({ message: 'Hello World', status: 200 });
-    expect(validator.validate).toHaveBeenCalledWith({ message: 'Hello World', status: 200 });
+    expect(validator.validate).toHaveBeenCalledWith({
+      message: 'Hello World',
+      status: 200,
+    });
     expect(mockResponse.json).toHaveBeenCalled();
   });
 
@@ -260,7 +276,7 @@ describe('parseFetchResponse', () => {
     } as unknown as Response;
 
     const validator = {
-      validate: jest.fn().mockImplementation((data) => {
+      validate: jest.fn().mockImplementation(data => {
         if (typeof data === 'string' && data.length > 0) {
           return data.toUpperCase();
         }
@@ -326,7 +342,9 @@ describe('parseFetchResponse', () => {
       statusText: 'Not Found',
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('HTTP 404: Not Found');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'HTTP 404: Not Found'
+    );
   });
 
   it('should handle responses with no body', async () => {
@@ -338,7 +356,9 @@ describe('parseFetchResponse', () => {
       body: null,
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('Response has no body');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'Response has no body'
+    );
   });
 
   it('should handle JSON parsing errors', async () => {
@@ -351,7 +371,9 @@ describe('parseFetchResponse', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('parseFetchResponse failed: Failed to parse JSON: Invalid JSON');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'parseFetchResponse failed: Failed to parse JSON: Invalid JSON'
+    );
   });
 
   it('should handle text parsing errors', async () => {
@@ -364,7 +386,9 @@ describe('parseFetchResponse', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('parseFetchResponse failed: Failed to parse text: Text parsing failed');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'parseFetchResponse failed: Failed to parse text: Text parsing failed'
+    );
   });
 
   it('should handle binary parsing errors', async () => {
@@ -372,12 +396,16 @@ describe('parseFetchResponse', () => {
       headers: {
         get: jest.fn().mockReturnValue('image/png'),
       },
-      arrayBuffer: jest.fn().mockRejectedValue(new Error('Binary parsing failed')),
+      arrayBuffer: jest
+        .fn()
+        .mockRejectedValue(new Error('Binary parsing failed')),
       ok: true,
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('parseFetchResponse failed: Failed to parse binary data: Binary parsing failed');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'parseFetchResponse failed: Failed to parse binary data: Binary parsing failed'
+    );
   });
 
   it('should handle unknown errors gracefully', async () => {
@@ -390,6 +418,134 @@ describe('parseFetchResponse', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetchResponse(mockResponse)).rejects.toThrow('parseFetchResponse failed: Failed to parse JSON: Unknown error');
+    await expect(parseFetchResponse(mockResponse)).rejects.toThrow(
+      'parseFetchResponse failed: Failed to parse JSON: Unknown error'
+    );
+  });
+
+  describe('withParse higher-order function', () => {
+    beforeEach(() => {
+      // Mock global fetch
+      global.fetch = jest.fn();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('should create enhanced fetch with parse method', async () => {
+      const mockResponse = {
+        headers: {
+          get: jest.fn().mockReturnValue('application/json'),
+        },
+        json: jest
+          .fn()
+          .mockResolvedValue({ message: 'Hello World', status: 200 }),
+        ok: true,
+        body: {},
+      } as unknown as Response;
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const parseFetch = withParse(fetch);
+      const result = await parseFetch(
+        'https://api.example.com/data'
+      ).parse<ApiResponse>();
+
+      expect(result).toEqual({ message: 'Hello World', status: 200 });
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.example.com/data',
+        undefined
+      );
+      expect(mockResponse.json).toHaveBeenCalled();
+    });
+
+    it('should work with fetch options', async () => {
+      const mockResponse = {
+        headers: {
+          get: jest.fn().mockReturnValue('application/json'),
+        },
+        json: jest
+          .fn()
+          .mockResolvedValue({ message: 'Hello World', status: 200 }),
+        ok: true,
+        body: {},
+      } as unknown as Response;
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const parseFetch = withParse(fetch);
+      const result = await parseFetch('https://api.example.com/data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }).parse<ApiResponse>();
+
+      expect(result).toEqual({ message: 'Hello World', status: 200 });
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.example.com/data',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    });
+
+    it('should work with validator', async () => {
+      const mockResponse = {
+        headers: {
+          get: jest.fn().mockReturnValue('application/json'),
+        },
+        json: jest
+          .fn()
+          .mockResolvedValue({ message: 'Hello World', status: 200 }),
+        ok: true,
+        body: {},
+      } as unknown as Response;
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const validator = {
+        validate: jest.fn().mockImplementation(data => {
+          if (typeof data === 'object' && data !== null && 'message' in data) {
+            return data;
+          }
+          throw new Error('Invalid data');
+        }),
+      };
+
+      const parseFetch = withParse(fetch);
+      const result = await parseFetch(
+        'https://api.example.com/data'
+      ).parse<ApiResponse>({ validator });
+
+      expect(result).toEqual({ message: 'Hello World', status: 200 });
+      expect(validator.validate).toHaveBeenCalledWith({
+        message: 'Hello World',
+        status: 200,
+      });
+    });
+
+    it('should preserve response properties', async () => {
+      const mockResponse = {
+        headers: {
+          get: jest.fn().mockReturnValue('application/json'),
+        },
+        json: jest.fn().mockResolvedValue({ message: 'Hello World' }),
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        body: {},
+      } as unknown as Response;
+
+      (global.fetch as jest.Mock).mockResolvedValue(mockResponse);
+
+      const parseFetch = withParse(fetch);
+      const response = await parseFetch('https://api.example.com/data');
+
+      expect(response.ok).toBe(true);
+      expect(response.status).toBe(200);
+      expect(response.statusText).toBe('OK');
+      expect(typeof (response as any).parse).toBe('function');
+    });
   });
 });
