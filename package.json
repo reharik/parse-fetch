@@ -1,0 +1,56 @@
+{
+  "name": "parse-fetch",
+  "version": "1.0.0",
+  "description": "parse the body in a fetched response",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "format": "prettier --write src/**/*.ts",
+    "format:check": "prettier --check src/**/*.ts"
+  },
+  "author": "Raif Harik",
+  "license": "ISC",
+  "keywords": [
+    "fetch",
+    "parse",
+    "response",
+    "typescript",
+    "validation",
+    "zod",
+    "joi",
+    "yup"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reharik/parse-fetch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/reharik/parse-fetch/issues"
+  },
+  "homepage": "https://github.com/reharik/parse-fetch#readme",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.7.0",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-jest": "^28.8.0",
+    "globals": "^15.12.0",
+    "jest": "^30.0.0",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.7.2"
+  }
+}
