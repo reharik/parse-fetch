@@ -15,7 +15,7 @@ export interface Validator<T = unknown> {
 export interface ParseOptions<T = unknown> {
   contentType?: KnownContentType;
   validator?: Validator<T>;
-  reviver?: (key: string, value: any) => T;
+  reviver?: (key: string, value: any) => any;
 }
 
 export interface ParseStrategy {
