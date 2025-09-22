@@ -1,10 +1,10 @@
 import { binaryTypes } from '../constants';
-import { ParseStrategy, KnownContentType } from '../types';
+import { ParseStrategy, KnownContentType, ParseOptions } from '../types';
 
 export const binaryStrategy: ParseStrategy = {
   canHandle: (contentType: KnownContentType) =>
     binaryTypes.some(type => contentType.includes(type)),
-  parse: async <T>(response: Response): Promise<T> => {
+  parse: async <T>(response: Response, _options?: ParseOptions<T>): Promise<T> => {
     try {
       return await response.arrayBuffer() as T;
     } catch (error) {

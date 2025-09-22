@@ -37,7 +37,7 @@ export async function parseFetchResponse<T = unknown>(
     const strategy = getStrategy(contentType);
 
     // Parse the response
-    const parsedData = await strategy.parse<T>(response);
+    const parsedData = await strategy.parse<T>(response, options);
 
     // Apply validation if provided
     if (options.validator) {

@@ -309,6 +309,38 @@ describe('parseFetchResponse', () => {
     expect(mockResponse.json).toHaveBeenCalled();
   });
 
+  it('should support JSON reviver for date parsing', async () => {
+    const mockResponse = {
+      headers: {
+        get: jest.fn().mockReturnValue('application/json'),
+      },
+      json: jest.fn().mockResolvedValue({ 
+        message: 'Hello World', 
+        createdAt: '2023-12-25T12:00:00.000Z' 
+      }),
+      ok: true,
+      body: {},
+    } as unknown as Response;
+
+    const reviver = (key: string, value: any) => {
+      if (key === 'createdAt' && typeof value === 'string') {
+        return new Date(value);
+      }
+      return value;
+    };
+
+    const result = await parseFetchResponse<{ 
+      message: string; 
+      createdAt: Date 
+    }>(mockResponse, { reviver });
+
+    expect(result.message).toBe('Hello World');
+    expect(result.createdAt).toBeInstanceOf(Date);
+    expect(result.createdAt.getFullYear()).toBe(2023);
+    expect(result.createdAt.getMonth()).toBe(11); // December (0-indexed)
+    expect(mockResponse.json).toHaveBeenCalled();
+  });
+
   it('should handle validation errors', async () => {
     const mockResponse = {
       headers: {

@@ -15,11 +15,12 @@ export interface Validator<T = unknown> {
 export interface ParseOptions<T = unknown> {
   contentType?: KnownContentType;
   validator?: Validator<T>;
+  reviver?: (key: string, value: any) => any;
 }
 
 export interface ParseStrategy {
   canHandle: (contentType: KnownContentType) => boolean;
-  parse: <T = unknown>(response: Response) => Promise<T>;
+  parse: <T = unknown>(response: Response, options?: ParseOptions<T>) => Promise<T>;
 }
 
 // Enhanced Response type with parse method
