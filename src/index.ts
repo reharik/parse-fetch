@@ -1,1 +1,1 @@
-export { parseFetchResponse, withParse } from './parseFetchResponse';
+export { parseFetch, parseFetchSafe, withParse, withParseSafe } from './parseFetchResponse';
