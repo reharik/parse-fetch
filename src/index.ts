@@ -4,4 +4,4 @@ export {
   withParse,
   withSafeParse,
 } from './parseFetchResponse';
-export type { ParseResult } from './types';
+export type { ParseResult, SuccessResult, FailureResult } from './types';
