@@ -5,13 +5,12 @@
 import { strategies } from './strategies';
 import { defaultStrategy } from './strategies/defaultStrategy';
 import {
-  handleValidationResult,
   KnownContentType,
-  ParseablePromise,
+  ParsablePromise,
   ParseOptions,
   ParseResult,
   ParseStrategy,
-  SafeParseablePromise,
+  SafeParsablePromise,
 } from './types';
 
 const getStrategy = (contentType: string): ParseStrategy => {
@@ -24,7 +23,7 @@ const getStrategy = (contentType: string): ParseStrategy => {
 
 const parse = async <T = unknown>(
   response: Response,
-  options: ParseOptions<T> = {}
+  options: ParseOptions = {}
 ): Promise<ParseResult<T>> => {
   try {
     if (!response.ok) {
@@ -63,38 +62,20 @@ const parse = async <T = unknown>(
 
 export async function parseFetch<T = unknown>(
   response: Response,
-  options: ParseOptions<T> = {}
+  options: ParseOptions = {}
 ): Promise<T> {
   const parsedResult = await parse<T>(response, options);
   if (!parsedResult.success) {
     throw new Error(parsedResult.errors.join(', '));
   }
-
-  if (!options.validator) {
-    return parsedResult.data;
-  }
-
-  const validationResult = options.validator.validate(parsedResult.data);
-  const handledResult = handleValidationResult(validationResult);
-  
-  if (!handledResult.success) {
-    throw new Error(handledResult.errors.join(', '));
-  }
-  
-  return handledResult.data;
+  return parsedResult.data;
 }
 
-export async function parseFetchSafe<T = unknown>(
+export async function safeParseFetch<T = unknown>(
   response: Response,
-  options: ParseOptions<T> = {}
+  options: ParseOptions = {}
 ): Promise<ParseResult<T>> {
-  const parsedResult = await parse<T>(response, options);
-  if (!parsedResult.success || !options.validator) {
-    return parsedResult;
-  }
-
-  const validationResult = options.validator.validate(parsedResult.data);
-  return handleValidationResult(validationResult);
+  return parse<T>(response, options);
 }
 
 // Higher-order function that enhances fetch with parse capability
@@ -102,12 +83,12 @@ export function withParse(fetchFn: typeof fetch) {
   return function (
     input: RequestInfo | URL,
     init?: RequestInit
-  ): ParseablePromise {
-    return new ParseablePromise(async (resolve, reject) => {
+  ): ParsablePromise {
+    return new ParsablePromise(async (resolve, reject) => {
       try {
         const response = await fetchFn(input, init);
         const enhanced = {
-          parse: <T = unknown>(options: ParseOptions<T> = {}): Promise<T> => {
+          parse: <T = unknown>(options: ParseOptions = {}): Promise<T> => {
             return parseFetch<T>(response, options);
           },
           // Keep original response properties
@@ -121,26 +102,31 @@ export function withParse(fetchFn: typeof fetch) {
   };
 }
 
-export function withParseSafe(fetchFn: typeof fetch) {
+export function withSafeParse(fetchFn: typeof fetch) {
   return function (
     input: RequestInfo | URL,
     init?: RequestInit
-  ): SafeParseablePromise {
-    return new SafeParseablePromise(async (resolve, reject) => {
+  ): SafeParsablePromise {
+    return new SafeParsablePromise(async (resolve, reject) => {
       try {
         const response = await fetchFn(input, init);
         const enhanced = {
           parse: <T = unknown>(
-            options: ParseOptions<T> = {}
+            options: ParseOptions = {}
           ): Promise<ParseResult<T>> => {
-            return parseFetchSafe<T>(response, options);
+            return safeParseFetch<T>(response, options);
           },
           // Keep original response properties
           ...response,
         };
         resolve(enhanced);
       } catch (error) {
-        reject(error);
+        reject({
+          success: false,
+          errors: [
+            `parseFetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          ],
+        });
       }
     });
   };

@@ -20,7 +20,6 @@
     "parse",
     "response",
     "typescript",
-    "validation",
     "zod",
     "joi",
     "yup"

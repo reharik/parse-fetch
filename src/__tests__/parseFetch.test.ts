@@ -1,9 +1,17 @@
 import { parseFetch } from '../index';
-import {ApiResponse, createMockJsonResponse, createMockTextResponse, createMockBinaryResponse } from './test-helpers';
+import {
+  ApiResponse,
+  createMockJsonResponse,
+  createMockTextResponse,
+  createMockBinaryResponse,
+} from './test-helpers';
 
 describe('parseFetch', () => {
   it('should parse JSON response with generic type', async () => {
-    const mockResponse = createMockJsonResponse({ message: 'Hello World', status: 200 });
+    const mockResponse = createMockJsonResponse({
+      message: 'Hello World',
+      status: 200,
+    });
 
     const result = await parseFetch<ApiResponse>(mockResponse);
 
@@ -34,7 +42,10 @@ describe('parseFetch', () => {
   });
 
   it('should default to unknown type when no generic provided', async () => {
-    const mockResponse = createMockJsonResponse({ message: 'Hello World', status: 200 });
+    const mockResponse = createMockJsonResponse({
+      message: 'Hello World',
+      status: 200,
+    });
 
     const result = await parseFetch(mockResponse);
 
@@ -43,7 +54,10 @@ describe('parseFetch', () => {
   });
 
   it('should handle XML content types', async () => {
-    const mockResponse = createMockTextResponse('<xml>Hello World</xml>', 'application/xml');
+    const mockResponse = createMockTextResponse(
+      '<xml>Hello World</xml>',
+      'application/xml'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -52,7 +66,10 @@ describe('parseFetch', () => {
   });
 
   it('should handle HTML content types', async () => {
-    const mockResponse = createMockTextResponse('<html>Hello World</html>', 'text/html');
+    const mockResponse = createMockTextResponse(
+      '<html>Hello World</html>',
+      'text/html'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -61,7 +78,10 @@ describe('parseFetch', () => {
   });
 
   it('should handle CSV content types', async () => {
-    const mockResponse = createMockTextResponse('name,age\nJohn,30', 'text/csv');
+    const mockResponse = createMockTextResponse(
+      'name,age\nJohn,30',
+      'text/csv'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -80,7 +100,10 @@ describe('parseFetch', () => {
   });
 
   it('should handle JavaScript content types', async () => {
-    const mockResponse = createMockTextResponse('console.log("Hello World")', 'application/javascript');
+    const mockResponse = createMockTextResponse(
+      'console.log("Hello World")',
+      'application/javascript'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -89,7 +112,10 @@ describe('parseFetch', () => {
   });
 
   it('should handle form data content types', async () => {
-    const mockResponse = createMockTextResponse('name=John&age=30', 'application/x-www-form-urlencoded');
+    const mockResponse = createMockTextResponse(
+      'name=John&age=30',
+      'application/x-www-form-urlencoded'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -98,7 +124,10 @@ describe('parseFetch', () => {
   });
 
   it('should use JSON strategy for JSON-LD content type', async () => {
-    const mockResponse = createMockJsonResponse({ '@context': 'https://schema.org', name: 'John' });
+    const mockResponse = createMockJsonResponse({
+      '@context': 'https://schema.org',
+      name: 'John',
+    });
 
     const result = await parseFetch(mockResponse);
 
@@ -107,7 +136,10 @@ describe('parseFetch', () => {
   });
 
   it('should use XML strategy for RSS content type', async () => {
-    const mockResponse = createMockTextResponse('<rss>Hello World</rss>', 'application/rss+xml');
+    const mockResponse = createMockTextResponse(
+      '<rss>Hello World</rss>',
+      'application/rss+xml'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -116,7 +148,10 @@ describe('parseFetch', () => {
   });
 
   it('should use default strategy for unknown content type', async () => {
-    const mockResponse = createMockTextResponse('Hello World', 'application/unknown');
+    const mockResponse = createMockTextResponse(
+      'Hello World',
+      'application/unknown'
+    );
 
     const result = await parseFetch<string>(mockResponse);
 
@@ -124,34 +159,11 @@ describe('parseFetch', () => {
     expect(mockResponse.text).toHaveBeenCalled();
   });
 
-  it('should validate JSON response with custom validator', async () => {
-    const mockResponse = createMockJsonResponse({ message: 'Hello World', status: 200 });
-
-    const validator = {
-      validate: jest.fn().mockImplementation((data: unknown) => data as ApiResponse),
-    };
-
-    const result = await parseFetch<ApiResponse>(mockResponse, { validator });
-
-    expect(result).toEqual({ message: 'Hello World', status: 200 });
-    expect(validator.validate).toHaveBeenCalledWith({ message: 'Hello World', status: 200 });
-  });
-
-  it('should validate text response with custom validator', async () => {
-    const mockResponse = createMockTextResponse('Hello World');
-
-    const validator = {
-      validate: jest.fn().mockImplementation((data: unknown) => data as string),
-    };
-
-    const result = await parseFetch<string>(mockResponse, { validator });
-
-    expect(result).toBe('Hello World');
-    expect(validator.validate).toHaveBeenCalledWith('Hello World');
-  });
-
-  it('should work without validator (backward compatibility)', async () => {
-    const mockResponse = createMockJsonResponse({ message: 'Hello World', status: 200 });
+  it('should work', async () => {
+    const mockResponse = createMockJsonResponse({
+      message: 'Hello World',
+      status: 200,
+    });
 
     const result = await parseFetch<ApiResponse>(mockResponse);
 
@@ -159,9 +171,9 @@ describe('parseFetch', () => {
   });
 
   it('should support JSON reviver for date parsing', async () => {
-    const mockResponse = createMockJsonResponse({ 
-      message: 'Hello World', 
-      createdAt: '2023-12-25T12:00:00.000Z' 
+    const mockResponse = createMockJsonResponse({
+      message: 'Hello World',
+      createdAt: '2023-12-25T12:00:00.000Z',
     });
 
     const reviver = (key: string, value: any) => {
@@ -171,31 +183,22 @@ describe('parseFetch', () => {
       return value;
     };
 
-    const result = await parseFetch<{ message: string; createdAt: Date }>(mockResponse, { reviver });
+    const result = await parseFetch<{ message: string; createdAt: Date }>(
+      mockResponse,
+      { reviver }
+    );
 
     expect(result.message).toBe('Hello World');
     expect(result.createdAt).toBeInstanceOf(Date);
     expect(result.createdAt.getMonth()).toBe(11); // December is month 11
   });
 
-  it('should handle validation errors', async () => {
-    const mockResponse = createMockJsonResponse({ invalid: 'data' });
-
-    const validator = {
-      validate: jest.fn().mockImplementation(() => {
-        throw new Error('Validation error: Invalid data structure');
-      }),
-    };
-
-    await expect(parseFetch<ApiResponse>(mockResponse, { validator })).rejects.toThrow(
-      'Validation error: Invalid data structure'
-    );
-  });
-
   it('should handle HTTP error responses', async () => {
     const mockResponse = createMockJsonResponse({}, false, 404, 'Not Found');
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('ParseFetch Error:HTTP 404: Not Found');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'ParseFetch Error:HTTP 404: Not Found'
+    );
   });
 
   it('should handle responses with no body', async () => {
@@ -207,7 +210,9 @@ describe('parseFetch', () => {
       body: null,
     } as unknown as Response;
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('ParseFetch Error:Response has no body');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'ParseFetch Error:Response has no body'
+    );
   });
 
   it('should handle JSON parsing errors', async () => {
@@ -220,7 +225,9 @@ describe('parseFetch', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('parseFetch failed: Failed to parse JSON: Invalid JSON');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'parseFetch failed: Failed to parse JSON: Invalid JSON'
+    );
   });
 
   it('should handle text parsing errors', async () => {
@@ -233,7 +240,9 @@ describe('parseFetch', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('parseFetch failed: Failed to parse text: Text parsing failed');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'parseFetch failed: Failed to parse text: Text parsing failed'
+    );
   });
 
   it('should handle binary parsing errors', async () => {
@@ -241,12 +250,16 @@ describe('parseFetch', () => {
       headers: {
         get: jest.fn().mockReturnValue('application/octet-stream'),
       },
-      arrayBuffer: jest.fn().mockRejectedValue(new Error('Binary parsing failed')),
+      arrayBuffer: jest
+        .fn()
+        .mockRejectedValue(new Error('Binary parsing failed')),
       ok: true,
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('parseFetch failed: Failed to parse binary data: Binary parsing failed');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'parseFetch failed: Failed to parse binary data: Binary parsing failed'
+    );
   });
 
   it('should handle unknown errors gracefully', async () => {
@@ -259,6 +272,8 @@ describe('parseFetch', () => {
       body: {},
     } as unknown as Response;
 
-    await expect(parseFetch(mockResponse)).rejects.toThrow('parseFetch failed: Failed to parse JSON: Unknown error');
+    await expect(parseFetch(mockResponse)).rejects.toThrow(
+      'parseFetch failed: Failed to parse JSON: Unknown error'
+    );
   });
 });

@@ -4,10 +4,7 @@ import { ParseStrategy, KnownContentType, ParseOptions } from '../types';
 export const additionalStrategy: ParseStrategy = {
   canHandle: (contentType: KnownContentType) =>
     additionalTypes.some(type => contentType.includes(type)),
-  parse: async <T>(
-    response: Response,
-    _options?: ParseOptions<T>
-  ): Promise<T> => {
+  parse: async <T>(response: Response, _options?: ParseOptions): Promise<T> => {
     try {
       return (await response.text()) as T;
     } catch (error) {

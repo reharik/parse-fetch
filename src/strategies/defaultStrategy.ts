@@ -2,10 +2,7 @@ import { ParseStrategy, ParseOptions } from '../types';
 
 export const defaultStrategy: ParseStrategy = {
   canHandle: (_contentType: string) => true, // Always handles as fallback
-  parse: async <T>(
-    response: Response,
-    _options?: ParseOptions<T>
-  ): Promise<T> => {
+  parse: async <T>(response: Response, _options?: ParseOptions): Promise<T> => {
     try {
       return (await response.text()) as T;
     } catch (error) {

@@ -1,4 +1,10 @@
-import { jsonTypes, xmlTypes, textTypes, binaryTypes, additionalTypes } from "./constants";
+import {
+  jsonTypes,
+  xmlTypes,
+  textTypes,
+  binaryTypes,
+  additionalTypes,
+} from './constants';
 
 // Combine all types into a single union
 export type KnownContentType =
@@ -8,20 +14,8 @@ export type KnownContentType =
   | (typeof binaryTypes)[number]
   | (typeof additionalTypes)[number];
 
-export interface ThrowingValidator<T = unknown> {
-  validate: (data: unknown) => T;
-}
-
-export interface SafeValidator<T = unknown> {
-  validate: (data: unknown) => ParseResult<T>;
-}
-
-export type Validator<T = unknown> = ThrowingValidator<T> | SafeValidator<T>;
-
-
-export interface ParseOptions<T = unknown> {
+export interface ParseOptions {
   contentType?: KnownContentType;
-  validator?: Validator<T>;
   reviver?: (key: string, value: any) => any;
 }
 
@@ -46,60 +40,49 @@ export function isParseResult<T>(value: unknown): value is ParseResult<T> {
   );
 }
 
-// Helper function to handle validation results with better type inference
-export function handleValidationResult<T>(
-  result: T | ParseResult<T>
-): ParseResult<T> {
-  if (isParseResult(result)) {
-    return result;
-  }
-  return { success: true, data: result };
-}
-
 export interface ParseStrategy {
   canHandle: (contentType: KnownContentType) => boolean;
-  parse: <T = unknown>(response: Response, options: ParseOptions<T>) => Promise<T>;
+  parse: <T = unknown>(response: Response, options: ParseOptions) => Promise<T>;
 }
 
 // Enhanced Response type with parse method
-export type ParseableResponse = Response & {
-  parse: <T = unknown>(options?: ParseOptions<T>) => Promise<T>;
+export type ParsableResponse = Response & {
+  parse: <T = unknown>(options?: ParseOptions) => Promise<T>;
 };
 
 // Custom Promise class that extends Promise and adds parse method
-export class ParseablePromise extends Promise<ParseableResponse> {
+export class ParsablePromise extends Promise<ParsableResponse> {
   constructor(
     executor: (
-      resolve: (value: ParseableResponse) => void,
+      resolve: (value: ParsableResponse) => void,
       reject: (reason?: any) => void
     ) => void
   ) {
     super(executor);
   }
 
-  parse<T = unknown>(options: ParseOptions<T> = {}): Promise<T> {
+  parse<T = unknown>(options: ParseOptions = {}): Promise<T> {
     return this.then(response => response.parse<T>(options));
   }
 }
 
 // Enhanced Response type with parse method
-export type SafeParseableResponse = Response & {
-    parse: <T = unknown>(options?: ParseOptions<T>) => Promise<ParseResult<T>>;
-  };
-  
-  // Custom Promise class that extends Promise and adds parse method
-  export class SafeParseablePromise extends Promise<SafeParseableResponse> {
-    constructor(
-      executor: (
-        resolve: (value: SafeParseableResponse) => void,
-        reject: (reason?: any) => void
-      ) => void
-    ) {
-      super(executor);
-    }
-  
-    parse<T = unknown>(options: ParseOptions<T> = {}): Promise<ParseResult<T>> {
-      return this.then(response => response.parse<T>(options));
-    }
+export type SafeParsableResponse = Response & {
+  parse: <T = unknown>(options?: ParseOptions) => Promise<ParseResult<T>>;
+};
+
+// Custom Promise class that extends Promise and adds parse method
+export class SafeParsablePromise extends Promise<SafeParsableResponse> {
+  constructor(
+    executor: (
+      resolve: (value: SafeParsableResponse) => void,
+      reject: (reason?: any) => void
+    ) => void
+  ) {
+    super(executor);
   }
-  
+
+  parse<T = unknown>(options: ParseOptions = {}): Promise<ParseResult<T>> {
+    return this.then(response => response.parse<T>(options));
+  }
+}

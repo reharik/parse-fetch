@@ -4,10 +4,7 @@ import { ParseStrategy, KnownContentType, ParseOptions } from '../types';
 export const jsonStrategy: ParseStrategy = {
   canHandle: (contentType: KnownContentType) =>
     jsonTypes.some(type => contentType.includes(type)),
-  parse: async <T>(
-    response: Response,
-    options?: ParseOptions<T>
-  ): Promise<T> => {
+  parse: async <T>(response: Response, options?: ParseOptions): Promise<T> => {
     try {
       // Use optimized fetch.json() first
       const data = await response.json();
