@@ -43,9 +43,10 @@ const result = await parseFetchSafe(
 ).parse<ApiResponse>();
 
 if (result.success) {
-  console.log('Data:', result.data); // TypeScript knows data exists
+  console.log('Data:', result.data);
 } else {
-  console.error('Errors:', result.errors); // TypeScript knows errors exists
+  // result.errors is BaseApiError[]
+  console.error('Errors:', result.errors.map(e => e.message).join(', '));
 }
 
 // Option 4: Direct safe function call
@@ -55,7 +56,7 @@ const result = await safeParseFetch<ApiResponse>(response);
 if (result.success) {
   console.log('Data:', result.data);
 } else {
-  console.error('Errors:', result.errors);
+  console.error('Errors:', result.errors.map(e => e.message).join(', '));
 }
 
 // With options
@@ -71,9 +72,19 @@ const data = await parseFetch('https://api.example.com/data', {
 The library uses discriminated union types for perfect type safety:
 
 ```typescript
+type BaseApiError =
+  | { kind: 'parse' | 'network'; message: string; originalError?: unknown }
+  | {
+      kind: 'http';
+      message: string;
+      status: number;
+      statusText: string;
+      bodyText?: string;
+    };
+
 type ParseResult<T> =
-  | { success: true; data: T } // Success case
-  | { success: false; errors: string[] }; // Failure case
+  | { success: true; data: T }
+  | { success: false; errors: BaseApiError[] };
 ```
 
 ### Type Safety Benefits
@@ -86,9 +97,15 @@ if (result.success) {
   console.log(result.data.message); // ✅ Type-safe access
   // console.log(result.errors);    // ❌ TypeScript error - errors doesn't exist on success
 } else {
-  // TypeScript knows result.errors exists and is string[]
-  console.log(result.errors.join(', ')); // ✅ Type-safe access
-  // console.log(result.data);           // ❌ TypeScript error - data doesn't exist on failure
+  // TypeScript knows result.errors exists and is BaseApiError[]
+  for (const err of result.errors) {
+    if (err.kind === 'http') {
+      console.error(`[HTTP ${err.status} ${err.statusText}] ${err.message}`);
+    } else {
+      console.error(err.message);
+    }
+  }
+  // console.log(result.data); // ❌ data doesn't exist on failure
 }
 ```
 
@@ -125,7 +142,7 @@ const result = await parseFetchSafe(
 if (result.success) {
   console.log('Success:', result.data);
 } else {
-  console.error('Errors:', result.errors);
+  console.error('Errors:', result.errors.map(e => e.message).join(', '));
 }
 ```
 
@@ -227,12 +244,22 @@ interface ParseOptions {
 
 ### `safeParseFetch<T>(response, options?)`
 
-Returns a discriminated union `ParseResult<T>`:
+Returns a discriminated union `ParseResult<T>` where failures contain structured errors:
 
 ```typescript
+type BaseApiError =
+  | { kind: 'parse' | 'network'; message: string; originalError?: unknown }
+  | {
+      kind: 'http';
+      message: string;
+      status: number;
+      statusText: string;
+      bodyText?: string;
+    };
+
 type ParseResult<T> =
   | { success: true; data: T }
-  | { success: false; errors: string[] };
+  | { success: false; errors: BaseApiError[] };
 ```
 
 ## License

@@ -24,9 +24,30 @@ export interface SuccessResult<T = unknown> {
   data: T;
 }
 
+export type BaseApiError = {
+  kind: 'parse' | 'http' | 'network';
+  message: string;
+  originalError?: unknown;
+};
+
+export type ParseError = BaseApiError & {
+  kind: 'parse';
+};
+
+export type HttpError = BaseApiError & {
+  kind: 'http';
+  status: number;
+  statusText: string;
+  bodyText?: string;
+};
+
+export type NetworkError = BaseApiError & {
+  kind: 'network';
+};
+
 export interface FailureResult {
   success: false;
-  errors: string[];
+  errors: BaseApiError[];
 }
 
 export type ParseResult<T = unknown> = SuccessResult<T> | FailureResult;

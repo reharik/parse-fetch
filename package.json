@@ -1,6 +1,6 @@
 {
   "name": "parse-fetch",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "parse the body in a fetched response",
   "type": "module",
   "main": "dist/index.js",
@@ -11,7 +11,8 @@
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
-    "format:check": "prettier --check src/**/*.ts"
+    "format:check": "prettier --check src/**/*.ts",
+    "prepare": "npm run format && npm run lint && npm run test && npm run build"
   },
   "author": "Raif Harik",
   "license": "ISC",

@@ -43,7 +43,16 @@ describe('withSafeParse', () => {
     const result = await parseFetchSafe('https://api.example.com/data').parse();
 
     assertFailure(result);
-    expect(result.errors).toEqual(['ParseFetch Error:HTTP 404: Not Found']);
+    expect(result).toMatchObject({
+      errors: [
+        {
+          kind: 'http',
+          message: 'ParseFetch Error:HTTP 404: Not Found',
+          status: 404,
+          statusText: 'Not Found',
+        },
+      ],
+    });
   });
 
   it('should reject with failure object on unexpected errors with withSafeParse', async () => {
@@ -53,9 +62,14 @@ describe('withSafeParse', () => {
 
     await expect(
       parseFetchSafe('https://api.example.com/data').parse()
-    ).rejects.toEqual({
+    ).rejects.toMatchObject({
       success: false,
-      errors: ['parseFetch failed: Network error'],
+      errors: [
+        {
+          kind: 'network',
+          message: 'parseFetch failed: Network error',
+        },
+      ],
     });
   });
 });

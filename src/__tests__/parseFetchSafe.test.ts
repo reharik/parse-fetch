@@ -25,7 +25,16 @@ describe('safeParseFetch', () => {
     const result = await safeParseFetch(mockResponse);
 
     assertFailure(result);
-    expect(result.errors).toEqual(['ParseFetch Error:HTTP 404: Not Found']);
+    expect(result).toMatchObject({
+      errors: [
+        {
+          kind: 'http',
+          message: 'ParseFetch Error:HTTP 404: Not Found',
+          status: 404,
+          statusText: 'Not Found',
+        },
+      ],
+    });
   });
 
   it('should return error result for parsing failures', async () => {
@@ -40,8 +49,13 @@ describe('safeParseFetch', () => {
 
     const result = await safeParseFetch(mockResponse);
     assertFailure(result);
-    expect(result.errors).toEqual([
-      'parseFetch failed: Failed to parse JSON: Invalid JSON',
-    ]);
+    expect(result).toMatchObject({
+      errors: [
+        {
+          kind: 'parse',
+          message: 'parseFetch failed: Failed to parse JSON: Invalid JSON',
+        },
+      ],
+    });
   });
 });

@@ -11,6 +11,8 @@ import {
   ParseResult,
   ParseStrategy,
   SafeParsablePromise,
+  HttpError,
+  ParseError,
 } from './types';
 
 const getStrategy = (contentType: string): ParseStrategy => {
@@ -27,18 +29,26 @@ const parse = async <T = unknown>(
 ): Promise<ParseResult<T>> => {
   try {
     if (!response.ok) {
+      const httpError: HttpError = {
+        kind: 'http',
+        message: `ParseFetch Error:HTTP ${response.status}: ${response.statusText}`,
+        status: response.status,
+        statusText: response.statusText,
+      };
       return {
         success: false,
-        errors: [
-          `ParseFetch Error:HTTP ${response.status}: ${response.statusText}`,
-        ],
+        errors: [httpError],
       };
     }
 
     if (!response.body) {
+      const parseError: ParseError = {
+        kind: 'parse',
+        message: 'ParseFetch Error:Response has no body',
+      };
       return {
         success: false,
-        errors: ['ParseFetch Error:Response has no body'],
+        errors: [parseError],
       };
     }
 
@@ -50,12 +60,14 @@ const parse = async <T = unknown>(
     const parsedData = await strategy.parse<T>(response, options);
     return { success: true, data: parsedData };
   } catch (error) {
-    // Wrap other errors with context
+    const parseError: ParseError = {
+      kind: 'parse',
+      message: `parseFetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      originalError: error,
+    };
     return {
       success: false,
-      errors: [
-        `parseFetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      ],
+      errors: [parseError],
     };
   }
 };
@@ -66,7 +78,7 @@ export async function parseFetch<T = unknown>(
 ): Promise<T> {
   const parsedResult = await parse<T>(response, options);
   if (!parsedResult.success) {
-    throw new Error(parsedResult.errors.join(', '));
+    throw new Error(parsedResult.errors.map(e => e.message).join(', '));
   }
   return parsedResult.data;
 }
@@ -124,7 +136,11 @@ export function withSafeParse(fetchFn: typeof fetch) {
         reject({
           success: false,
           errors: [
-            `parseFetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            {
+              kind: 'network',
+              message: `parseFetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              originalError: error,
+            },
           ],
         });
       }
