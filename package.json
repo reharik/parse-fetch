@@ -1,6 +1,6 @@
 {
   "name": "parse-fetch",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "parse the body in a fetched response",
   "type": "module",
   "main": "dist/index.js",
